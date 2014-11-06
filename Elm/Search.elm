@@ -19,7 +19,7 @@ main = let searchBox = Field.field Field.defaultStyle searchBar.handle identity
     combine
     [ lift (searchBox "Enter search") searchBar.signal
     , plainText "\n" |> constant
-    , dropRepeats searchBar.signal |> lift scene 
+    , dropRepeats searchBar.signal |> sampleOn (every second) |> lift scene
     ] |> lift (flow down)
 
 scene : Field.Content -> Element
