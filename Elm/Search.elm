@@ -14,8 +14,13 @@ searchBar : Input Field.Content
 searchBar = input Field.noContent
 
 main : Signal Element
-main =
-    lift scene searchBar.signal
+main = let searchBox = Field.field Field.defaultStyle searchBar.handle identity
+  in
+    combine
+    [ lift (searchBox "Enter search") searchBar.signal
+    , plainText "\n" |> constant
+    , dropRepeats searchBar.signal |> lift scene 
+    ] |> lift (flow down)
 
 scene : Field.Content -> Element
 scene fieldContent = 
@@ -27,13 +32,8 @@ scene fieldContent =
                           |> flow down
                           |> flip (::) [image 275 200 attraction.imageUrl]
                           |> flow right
-      searchBox = Field.field Field.defaultStyle searchBar.handle identity
   in 
-    flow down
-    [ searchBox "Enter search" fieldContent
-    , plainText "\n"
-    , map result sortedAttractions |> flow down
-    ]
+    map result sortedAttractions |> flow down
 
 type Attraction = { title: String, body: String, imageUrl: String }
 
