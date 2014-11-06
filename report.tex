@@ -1,3 +1,20 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[toc,page]{appendix}
+
+\begin{document}
+
+\title{Functional Reactive Programming in elm}
+\author{s1107496}
+
+\maketitle
+
+
+
+\begin{appendices}
+\chapter{Appendix A: Example source code}
+\begin{verbatim}
 import String
 import Char
 import Set
@@ -214,4 +231,14 @@ attractionsByRelevance query = attractions
                                |> List.sortBy fst
                                |> List.reverse 
                                |> map snd
+\end{verbatim}
 
+\end{appendices}
+
+%\begin{figure}[ht!]
+%\centering
+%\includegraphics[width=165mm]{graph.png}
+%(Tests run on computer with an i5 processor and 24GB RAM.)
+%\end{figure}
+
+\end{document}
