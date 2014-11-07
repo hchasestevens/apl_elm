@@ -4,7 +4,7 @@
 \usepackage[toc,page]{appendix}
 \usepackage{hyperref}
 \usepackage{fancyref}
-%\usepackage[round]{natbib}
+\usepackage[round]{natbib}
 
 \begin{document}
 
@@ -27,7 +27,62 @@ and disadvantages.
 \section{Context}
 
 \section{elm}
-elm is a strongly-typed, Haskell-derived functional programming language which compiles into CSS, HTML, and Javascript. 
+\subsection{Introduction}
+elm is a strongly-typed, Haskell-derived functional programming language which compiles into CSS, HTML, and Javascript \citep{czaplicki_chong_2013}. In elm, functional reactive streams are incorporated as the \texttt{Signal} datatype. \texttt{Signal}s may be streams of arbitrary elements, for example, the \texttt{Mouse.position} stream is of type \texttt{Signal (Int,Int)} \citep*{elm_mouse}. In this way, \texttt{Signal}s bear some resemblance to monads as implemented in Haskell.
+
+\subsection{\texttt{Signal} manipulation in elm}
+elm provides several notable functions for transforming \texttt{Signal}s, as documented in the standard library catalog \citep{elm_signal}:
+\subsubsection{\texttt{constant}}
+\texttt{constant}, with type \texttt{a -> Signal a}, takes a value and creates a constant, unchanging \texttt{Signal} from it. This is particularly useful when displaying static text, e.g.
+\begin{verbatim}
+main = constant (plainText "Hello world")
+\end{verbatim}
+\subsubsection{\texttt{lift}}
+\texttt{lift}, with type \texttt{(a -> b) -> Signal a -> Signal b}, allows a function to be applied to the events of a \texttt{Signal}. This can been viewed as an equivalent to Haskell's \texttt{fmap} function, which operates on Monads. As an example:
+\begin{verbatim}
+main = constant 1
+       |> lift ((*) 2)
+       |> lift asText
+\end{verbatim}
+transforms the constant stream
+\begin{verbatim}
+- 1 - 1 - 1 - 1 - 1 -
+\end{verbatim}
+into
+\begin{verbatim}
+- 2 - 2 - 2 - 2 - 2 -
+\end{verbatim}
+and then, finally, into
+\begin{verbatim}
+- Element "2" - Element "2" - Element "2" - Element "2" - Element "2" -
+\end{verbatim}
+Related functions, \texttt{lift2} through \texttt{lift8}, take functions taking between two and eight arguments as well as the appropriate number of \texttt{Stream}s.
+\subsubsection{\texttt{merge}}
+\texttt{merge}, with type \texttt{Signal a -> Signal a -> Signal a}, combines two streams into a single stream, dropping events from the second stream if there is a simultaneous event in the first stream. As an example: supposing one wanted to create a Tetris game in elm, which updated the game state either every two seconds (allowing blocks to fall) or whenever the user pressed a key. Using \texttt{merge}, with \texttt{['U','P','D','A','T','E']} serving an indicator to cause blocks to fall every two seconds, one might write:
+\begin{samepage}
+\begin{verbatim}
+main = Keyboard.keysDown
+       |> lift (map Char.fromCode)
+       |> flip merge (constant ['U','P','D','A','T','E']
+                      |> sampleOn (every (2 * second)))
+       |> lift updateGame
+\end{verbatim}
+\end{samepage}
+\subsubsection{\texttt{foldp}}
+\texttt{foldp}, with type \texttt{(a -> b -> b) -> b -> Signal a -> Signal b}, accumulates values from a stream given an accumulator function and a base case (\texttt{b}). In this way, it can be considered similar to Haskell's \texttt{foldl}. As an example, to display all key presses made by the user:
+\begin{samepage}
+\begin{verbatim}
+main = Keyboard.keysDown
+       |> lift (map Char.fromCode)
+       |> foldp (flip (++)) []
+       |> lift (String.fromList >> asText)
+\end{verbatim}
+\end{samepage}
+an interesting special case of \texttt{foldp} is \texttt{count}, which can be defined thusly:
+\begin{verbatim}
+count = foldp (\x y -> y + 1) 0
+\end{verbatim}
+Regardless of their type, \texttt{count} will increment on every event from the given stream.
 
 \section{Example}
 
@@ -163,15 +218,14 @@ combine
 \end{samepage}
 Note that this requires "splitting" \texttt{searchBar.signal} (as mentioned in \ref{sec:main}), as otherwise the search engine's text input field would only accept keystrokes every two seconds. The two results of type \texttt{Signal Element} are then put into a list (\texttt{[Signal Element]}), which is transformed into type \texttt{Signal [Element]} by \texttt{combine}.
 
-Were the relevancy rankings a server-side computation requested via AJAX, the resultant signal would have been asynchronous by default, which would allow for displaying the ranked results as soon as they are ready. In Asynchronous Functional Reactive Programming for GUIs \citet{czaplicki_chong_2013}, Czaplicki and Chong describe an \texttt{async} primitive for elm which allows any signal to be marked for asynchronous computation, allowing these signals to be arbitrarily computationally expensive without compromising GUI responsiveness. This, however, does not appear in the current implementation of elm.
+Were the relevancy rankings a server-side computation requested via AJAX, the resultant signal would have been asynchronous by default, which would allow for displaying the ranked results as soon as they are ready. In Asynchronous Functional Reactive Programming for GUIs, \cite{czaplicki_chong_2013} describe an \texttt{async} primitive for elm which allows any signal to be marked for asynchronous computation, allowing these signals to be arbitrarily computationally expensive without compromising GUI responsiveness. This, however, does not appear in the current implementation of elm.
 \section{Resources}
 
 \section{Related work}
 
 \section{Conclusion}
 
-\section{Bibliography}
-\bibliographystyle{abbrvnat}
+\bibliographystyle{IEEEtranN}
 \bibliography{bib}
 
 \begin{appendices}
@@ -400,11 +454,5 @@ attractionsByRelevance query = attractions
 \end{verbatim}
 
 \end{appendices}
-
-%\begin{figure}[ht!]
-%\centering
-%\includegraphics[width=165mm]{graph.png}
-%(Tests run on computer with an i5 processor and 24GB RAM.)
-%\end{figure}
 
 \end{document}
