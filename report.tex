@@ -22,9 +22,27 @@ reactive programming as utilized in elm, as well as its relative advantages
 and disadvantages.
 \end{abstract}
 
+
+
 \section{Introduction}
+When creating user interfaces, developers seek to keep all interactive elements of the interface responsive to user input, even when heavy computations are being performed or high-latency network calls are being made. Achieving this on the web typically has involved heavy use of callbacks, which induce unnecessary complexity and can make code structure difficult to reason about \citep{czaplicki_2012}.
+
+Functional reactive programming is a paradigm intended to remedy this issue by offering as primitives asynchronous streams of user inputs which may be manipulated and used to drive program output and UI behaviour \citep{staltz_2014}. FRP also seeks to promote more intelligible code by imposing a functional, declarative approach, in contrast to traditional GUI development practices \citep{staltz_2014}. 
+
+The elm programming language incorporates the functional reactive programming paradigm, while also leveraging its principles to elimintate the need for directly specifying UI elements \citep{czaplicki_chong_2013}. This report examines the functional reactive utilities supplied by elm, while also demonstrating their use via example. Further to this, a worked example of a simple search engine as implemented in elm is provided, with specific care taken to explain how functional reactive programming is used to process user input and return query results. Finally, the report concludes with an annotated list of resources available for further investigations into functional reactive programming.
+
+
 
 \section{Context}
+Typically, modern web interfaces make frequent network calls to remote servers to access data and performing computationally intensive tasks. Achieving responsive web interfaces is therefore a matter of concurrently processing user input and updating interactive UI elements; a synchronous UI will otherwise become locked during a network call with high latency or over a low-bandwidth connection \citep{czaplicki_2012}.
+
+In Javascript, the traditional solution to this problem is the use of callbacks, whereby asynchronous calls to network resources or computationally-intensive functions are supplied with a function to call upon their completion. \cite{czaplicki_2012} contends that this style of programming leads to "responsive but unreadable" code, which necessarily has behaviour that is difficult to reason about, given that data will be passed from function to function in an unstructured, "spaghetti code"-like manner. \cite{czaplicki_2012} further contends that maintaining such code has a high cognitive load, since the implicit callback structure will need to be investigated and analysed before changes to the code are made.
+
+
+\section{Functional reactive programming}
+In the functional reactive paradigm, asynchronous calls are abstracted away via use of "streams" (also referred to as "signals"). Streams are asynchronously updated series of events which may be created, manipulated, and combined in a myriad of ways \citep{staltz_2014}. Streams are used to represent not only user input, but also to wrap the program's output, resulting in a system which is responsive by default \citep{czaplicki_2012}. Streams may also represent data from remote servers, such as RSS feeds or API responses, as well as the results of internal program functions \citep{staltz_2014}. By ubiquitously utilizing the high-level stream concept and having streams of events directly drive program output and UI behaviour, \cite{staltz_2014} notes that functional reactive programming can result in cleaner and more concise code that ultimately proves easier to reason about.
+
+
 
 \section{elm}
 \subsection{Introduction}
@@ -58,7 +76,8 @@ and then, finally, into
 \end{verbatim}
 Related functions, \texttt{lift2} through \texttt{lift8}, take functions taking between two and eight arguments as well as the appropriate number of \texttt{Stream}s.
 \subsubsection{\texttt{merge}}
-\texttt{merge}, with type \texttt{Signal a -> Signal a -> Signal a}, combines two streams into a single stream, dropping events from the second stream if there is a simultaneous event in the first stream. As an example: supposing one wanted to create a Tetris game in elm, which updated the game state either every two seconds (allowing blocks to fall) or whenever the user pressed a key. Using \texttt{merge}, with \texttt{['U','P','D','A','T','E']} serving an indicator to cause blocks to fall every two seconds, one might write:
+\texttt{merge}, with type \texttt{Signal a -> Signal a -> Signal a}, combines two streams into a single stream, dropping events from the second stream if there is a simultaneous event in the first stream. As an example: supposing one wanted to create a Tetris game in elm, which updated the game state either every two seconds (allowing blocks to fall) or whenever the user pressed a key. Using \texttt{merge}, with \texttt{['U','P','D','A','T','E']} serving as an indicator to cause blocks to fall every two seconds, one might write:
+\label{sampleOn_example}
 \begin{samepage}
 \begin{verbatim}
 main = Keyboard.keysDown
@@ -78,11 +97,26 @@ main = Keyboard.keysDown
        |> lift (String.fromList >> asText)
 \end{verbatim}
 \end{samepage}
-an interesting special case of \texttt{foldp} is \texttt{count}, which can be defined thusly:
+An interesting special case of \texttt{foldp} is \texttt{count}, which can be defined thusly:
 \begin{verbatim}
 count = foldp (\x y -> y + 1) 0
 \end{verbatim}
 Regardless of their type, \texttt{count} will increment on every event from the given stream.
+\subsubsection{\texttt{keepIf}}
+\texttt{keepif}, with type \texttt{(a -> Bool) -> a -> Signal a -> Signal a}, allows filtering events from a stream given a predicate and some base case (\texttt{a}). For example,
+\begin{samepage}
+\begin{verbatim}
+main = Mouse.clicks
+       |> count
+       |> keepIf ((>) 5) 0
+       |> lift asText
+\end{verbatim}
+\end{samepage}
+will display the number of mouse clicks up to a maximum of 4.
+\subsubsection{\texttt{sampleOn}}
+Finally, \texttt{sampleOn}, with type \texttt{Signal a -> Signal b -> Signal b}, produces a stream of events from \texttt{Signal b} which updates only when \texttt{signal a} does. This is especially useful in combination with builtin functions like \texttt{every second}, as shown in the example in \ref{sampleOn_example}.
+
+
 
 \section{Example}
 
@@ -101,13 +135,13 @@ their query.
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=150mm]{castle_island.png}
+\includegraphics[width=140mm]{castle_island.png}
 \caption{Example search engine running using \texttt{elm-reactor}.}
 \end{figure}
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=150mm]{volcano_or_volcanic_rock.png}
+\includegraphics[width=140mm]{volcano_or_volcanic_rock.png}
 \caption{A second user query, and its results.}
 \end{figure}
 
@@ -165,15 +199,13 @@ scene fieldContent =
     map result sortedAttractions |> flow down
 \end{verbatim}
 \end{samepage}
-
-\subsection{Development}
 \begin{figure}[ht!]
-
 \centering
-\includegraphics[width=150mm]{lost_input.png}
-\caption{User query typed at moderate speed into the text input element is partially discarded.}
+\includegraphics[width=140mm]{lost_input.png}
+\caption{User query typed into the text input element is partially discarded.}
 \label{fig:Lost}
 \end{figure}
+\subsection{Development}
 Because ranking the attractions by tf-idf score is a nontrivial computation, naively passing the text field's signal directly to \texttt{scene} within \texttt{main} (as below) results in a text field that is not only unresponsive, but, worse, loses user input (see Figure \ref{fig:Lost}).
 \begin{samepage}
 \begin{verbatim}
@@ -219,11 +251,23 @@ combine
 Note that this requires "splitting" \texttt{searchBar.signal} (as mentioned in \ref{sec:main}), as otherwise the search engine's text input field would only accept keystrokes every two seconds. The two results of type \texttt{Signal Element} are then put into a list (\texttt{[Signal Element]}), which is transformed into type \texttt{Signal [Element]} by \texttt{combine}.
 
 Were the relevancy rankings a server-side computation requested via AJAX, the resultant signal would have been asynchronous by default, which would allow for displaying the ranked results as soon as they are ready. In Asynchronous Functional Reactive Programming for GUIs, \cite{czaplicki_chong_2013} describe an \texttt{async} primitive for elm which allows any signal to be marked for asynchronous computation, allowing these signals to be arbitrarily computationally expensive without compromising GUI responsiveness. This, however, does not appear in the current implementation of elm.
-\section{Resources}
 
-\section{Related work}
+
+
+\section{Resources}
+\subsection{The introduction to Reactive Programming you've been missing}
+In this tutorial, \citeauthor{staltz_2014} provides an excellent overview of functional programming concepts, as well as supplying motivation for the paradigm's usage. Multitudinous examples are provided, with illustrations to help visualize how various manipulations affect stream output and behaviour. \citeauthor{staltz_2014} then offers an example of a Twitter-esque "Who to follow" interface element as implemented through the RxJS functional reactive Javascript library, helpfully explaining design and implementation decisions along the way. 
+
+\subsection{Controlling Time and Space: understanding the many formulations of FRP}
+In this 40-minute presentation, elm language creator \citeauthor{czaplicki_2014} gives a brief introduction to elm and the functional reactive programming paradigm, with special note made of elm's "time-travelling" debugger and hot-swap ability. More notably, \citeauthor{czaplicki_2014} explicates the design decisions behind elm's synchronous-by-default flavor of functional reactive programming, and contrasts this approach to other systems in which stream graphs can be reconfigured dynamically (higher-order functional reactive programming), systems in which streams are asynchronous by default (ansynchronous data flow), and other applications of streams outside of interfaces (arrowized functional reactive programming). 
+
+
+
 
 \section{Conclusion}
+While still in its (relative) infancy, elm offers a well-developed and surprisingly intuitive means by which to design and develop user interfaces via functional reactive programming. Furthermore, by employing functional reactive programming to allow the automated generation of both graphical elements and their computational "backend", elm makes a strong case for the use of functional reactive languages and libraries over traditional callback-based asynchronous approaches. However, without mature support for asynchronous streams outside of AJAX requests, creating truly responsive systems with elm can be a challenge.
+
+
 
 \bibliographystyle{IEEEtranN}
 \bibliography{bib}
@@ -422,7 +466,9 @@ idf token = let documents = map (.body >> tokens >> Set.fromList) attractions
                                  |> List.length
   in 
      toFloat (List.length attractions) / toFloat tokenFrequency |> logBase 2
-    
+\end{verbatim}
+\begin{samepage}
+\begin{verbatim}
 relevance : [String] -> [String] -> Float
 relevance query document = 
   let mutualTokens = (Set.fromList query, Set.fromList document) 
@@ -452,6 +498,7 @@ attractionsByRelevance query = attractions
                                |> List.reverse 
                                |> map snd
 \end{verbatim}
+\end{samepage}
 
 \end{appendices}
 
