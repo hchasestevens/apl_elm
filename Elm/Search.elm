@@ -14,17 +14,20 @@ searchBar : Input Field.Content
 searchBar = input Field.noContent
 
 main : Signal Element
-main = let searchBox = Field.field Field.defaultStyle searchBar.handle identity
+main = let search = Field.field Field.defaultStyle searchBar.handle identity
   in
     combine
-    [ lift (searchBox "Enter search") searchBar.signal
+    [ lift (search "Enter search") searchBar.signal
     , plainText "\n" |> constant
-    , dropRepeats searchBar.signal |> sampleOn (every second) |> lift scene
+    , dropRepeats searchBar.signal 
+      |> sampleOn (every (2 * second)) 
+      |> lift scene
     ] |> lift (flow down)
 
 scene : Field.Content -> Element
 scene fieldContent = 
-  let sortedAttractions = tokens fieldContent.string |> attractionsByRelevance
+  let sortedAttractions = tokens fieldContent.string 
+                          |> attractionsByRelevance
       result attraction = [ (toText >> bold) attraction.title
                           , toText attraction.body, toText "\n"
                           ] 

@@ -2,6 +2,9 @@
 \usepackage{graphicx}
 \usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
 \usepackage[toc,page]{appendix}
+\usepackage{hyperref}
+\usepackage{fancyref}
+%\usepackage[round]{natbib}
 
 \begin{document}
 
@@ -10,10 +13,170 @@
 
 \maketitle
 
+\begin{abstract}
+Functional reactive programming has been proposed as a means of 
+creating responsive, concurrent, and asynchronous web-based GUIs without necessitating inscrutable code. In this report, elm's implementation of functional reactive programming
+is described and evaluated. A toy search engine implementation is also
+presented in order to better demonstrate the key concepts of functional
+reactive programming as utilized in elm, as well as its relative advantages 
+and disadvantages.
+\end{abstract}
 
+\section{Introduction}
+
+\section{Context}
+
+\section{elm}
+elm is a strongly-typed, Haskell-derived functional programming language which compiles into CSS, HTML, and Javascript. 
+
+\section{Example}
+
+\subsection{Overview}
+The example created for this report was a simple, one-page search engine. The engine 
+employs the tf-idf algorithm to allow users to search for tourist destinations within
+Scotland. The complete code for this example is given in the appendix on page \pageref{app:A}. The code was loosely adapted from the example given at 
+\url{http://elm-lang.org/edit/examples/Reactive/TextField.elm}.
+
+\subsection{UI elements}
+At the top of the search engine page, a text input is displayed, into which the user
+types their query. Below this, the query results (which consist of a title, a 
+description, and, to the right, a photograph) are displayed in descending order of
+relevance. These results are updated dynamically in near-real-time, as the user types 
+their query.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=150mm]{castle_island.png}
+\caption{Example search engine running using \texttt{elm-reactor}.}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=150mm]{volcano_or_volcanic_rock.png}
+\caption{A second user query, and its results.}
+\end{figure}
+
+\subsection{Implementation}
+\subsubsection{Input signal}
+The search engine is driven from a single input signal, namely, a \texttt{Graphics.Input.Field} text field input signal:
+\begin{samepage}
+\begin{verbatim}
+import Graphics.Input (Input, input)
+import Graphics.Input.Field as Field
+
+searchBar : Input Field.Content
+searchBar = input Field.noContent
+\end{verbatim}
+\end{samepage}
+\subsubsection{\texttt{main}}
+\label{sec:main}
+In \texttt{main}, the above signal is used as input to both a function which yields a signal for the search bar element at the top of the page (\texttt{searchBox}, \texttt{lift}ed) and a function which yields a signal for the result element displayed below (\texttt{scene}, also \texttt{lift}ed). A third, constant newline signal is used to divide the two elements. These
+three signals are \texttt{combine}d and laid out by using \texttt{lift (flow down)}, resulting in the \texttt{Signal Element} return value.
+\begin{samepage}
+\begin{verbatim}
+main : Signal Element
+main = let search = Field.field Field.defaultStyle searchBar.handle identity
+  in
+    combine
+    [ lift (search "Enter search") searchBar.signal
+    , plainText "\n" |> constant
+    , dropRepeats searchBar.signal 
+      |> sampleOn (every (2 * second)) 
+      |> lift scene
+    ] |> lift (flow down)
+\end{verbatim}
+\end{samepage}
+\subsubsection{scene}
+The \texttt{scene} function takes \texttt{searchBar}'s contents as input. Its tokenized
+contents are passed into \texttt{attractionsByRelevance}, which returns a list of 
+attractions (\texttt{record}s) sorted by query-relevance (descending). Each of these
+is then converted into a "result" element (containing title, description, and image)
+by the inline \texttt{result} function. Finally, the individual results are combined
+into a single element via \texttt{flow down}.
+\begin{samepage}
+\begin{verbatim}
+scene : Field.Content -> Element
+scene fieldContent = 
+  let sortedAttractions = tokens fieldContent.string 
+                          |> attractionsByRelevance
+      result attraction = [ (toText >> bold) attraction.title
+                          , toText attraction.body, toText "\n"
+                          ] 
+                          |> map leftAligned 
+                          |> flow down
+                          |> flip (::) [image 275 200 attraction.imageUrl]
+                          |> flow right
+  in 
+    map result sortedAttractions |> flow down
+\end{verbatim}
+\end{samepage}
+
+\subsection{Development}
+\begin{figure}[ht!]
+
+\centering
+\includegraphics[width=150mm]{lost_input.png}
+\caption{User query typed at moderate speed into the text input element is partially discarded.}
+\label{fig:Lost}
+\end{figure}
+Because ranking the attractions by tf-idf score is a nontrivial computation, naively passing the text field's signal directly to \texttt{scene} within \texttt{main} (as below) results in a text field that is not only unresponsive, but, worse, loses user input (see Figure \ref{fig:Lost}).
+\begin{samepage}
+\begin{verbatim}
+let finalElements fieldContent = 
+  [ search "Enter search" fieldContent
+  , scene fieldContent  -- results in unresponsive text field
+  ] |> flow down
+in
+  lift finalElements searchBar.signal
+\end{verbatim}
+\end{samepage}
+To combat this, the user input signal is instead first filtered down (via \texttt{dropRepeats}) into a signal which contains only events which reflect a change in the input, e.g. from
+\begin{samepage}
+\begin{verbatim}
+- A - A - A - B - B - C - D - D -
+\end{verbatim}
+to
+\begin{verbatim}
+- A - - - - - B - - - C - D - - -
+\end{verbatim}
+\end{samepage}
+Further to this, the resultant stream is sampled only once every two seconds - unfortunately, shorter time periods still cause issues with loss of user input. This transformation can be visualized as follows:
+\begin{samepage}
+\begin{verbatim}
+- A - - - - - B - - - C - D - - -
+\end{verbatim}
+to (assuming five dashes are equivalent to two seconds):
+\begin{verbatim}
+- - - - A - - - - B - - - - D - -
+\end{verbatim}
+\end{samepage}
+The final process is therefore:
+\begin{samepage}
+\begin{verbatim}
+combine
+[ lift (search "Enter search") searchBar.signal
+, dropRepeats searchBar.signal  -- keep only changes
+  |> sampleOn (every (2 * second))  -- events every two seconds
+  |> lift scene  -- pass to scene, which ranks attractions
+] |> lift (flow down)
+\end{verbatim}
+\end{samepage}
+Note that this requires "splitting" \texttt{searchBar.signal} (as mentioned in \ref{sec:main}), as otherwise the search engine's text input field would only accept keystrokes every two seconds. The two results of type \texttt{Signal Element} are then put into a list (\texttt{[Signal Element]}), which is transformed into type \texttt{Signal [Element]} by \texttt{combine}.
+
+Were the relevancy rankings a server-side computation requested via AJAX, the resultant signal would have been asynchronous by default, which would allow for displaying the ranked results as soon as they are ready. In Asynchronous Functional Reactive Programming for GUIs \citet{czaplicki_chong_2013}, Czaplicki and Chong describe an \texttt{async} primitive for elm which allows any signal to be marked for asynchronous computation, allowing these signals to be arbitrarily computationally expensive without compromising GUI responsiveness. This, however, does not appear in the current implementation of elm.
+\section{Resources}
+
+\section{Related work}
+
+\section{Conclusion}
+
+\section{Bibliography}
+\bibliographystyle{abbrvnat}
+\bibliography{bib}
 
 \begin{appendices}
 \chapter{Appendix A: Example source code}
+\label{app:A}
 \begin{verbatim}
 import String
 import Char
@@ -31,12 +194,20 @@ searchBar : Input Field.Content
 searchBar = input Field.noContent
 
 main : Signal Element
-main =
-    lift scene searchBar.signal
+main = let search = Field.field Field.defaultStyle searchBar.handle identity
+  in
+    combine
+    [ lift (search "Enter search") searchBar.signal
+    , plainText "\n" |> constant
+    , dropRepeats searchBar.signal 
+      |> sampleOn (every (2 * second)) 
+      |> lift scene
+    ] |> lift (flow down)
 
 scene : Field.Content -> Element
 scene fieldContent = 
-  let sortedAttractions = tokens fieldContent.string |> attractionsByRelevance
+  let sortedAttractions = tokens fieldContent.string 
+                          |> attractionsByRelevance
       result attraction = [ (toText >> bold) attraction.title
                           , toText attraction.body, toText "\n"
                           ] 
@@ -44,13 +215,8 @@ scene fieldContent =
                           |> flow down
                           |> flip (::) [image 275 200 attraction.imageUrl]
                           |> flow right
-      searchBox = Field.field Field.defaultStyle searchBar.handle identity
   in 
-    flow down
-    [ searchBox "Enter search" fieldContent
-    , plainText "\n"
-    , map result sortedAttractions |> flow down
-    ]
+    map result sortedAttractions |> flow down
 
 type Attraction = { title: String, body: String, imageUrl: String }
 
