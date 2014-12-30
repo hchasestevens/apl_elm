@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!-- saved from url=(0030)http://localhost:8000/Main.elm -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><title>Scottish Tourist Attraction Search</title><style type="text/css">a:link {text-decoration: none; color: rgb(15,102,230);}
+a:visited {text-decoration: none}
+a:active {text-decoration: none}
+a:hover {text-decoration: underline; color: rgb(234,21,122);}
+html,body {height: 100%; margin: 0px;}</style><style type="text/css"></style><style type="text/css">html,head,body { padding:0; margin:0; }body { font-family: calibri, helvetica, arial, sans-serif; }</style></head><body><script type="text/javascript" src="./Main.elm_files/elm-runtime.js"></script><script type="text/javascript">Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm) {
+   "use strict";
+   _elm.Main = _elm.Main || {};
+   if (_elm.Main.values)
+   return _elm.Main.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _A = _N.Array.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Main",
+   $Basics = Elm.Basics.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Graphics$Input = Elm.Graphics.Input.make(_elm),
+   $Graphics$Input$Field = Elm.Graphics.Input.Field.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Set = Elm.Set.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
+   $Text = Elm.Text.make(_elm),
+   $Time = Elm.Time.make(_elm);
+   var unique = function (xs) {
+      return $Set.toList($Set.fromList(xs));
+   };
+   var counts = function (tokens) {
+      return function () {
+         var count = F2(function (item,
+         list) {
+            return $List.length(A2($List.filter,
+            F2(function (x,y) {
+               return _U.eq(x,y);
+            })(item),
+            list));
+         });
+         var tokenCount = A2($Basics.flip,
+         count,
+         tokens);
+         var uniqueTokens = unique(tokens);
+         return $Dict.fromList($List.zip(uniqueTokens)(A2($List.map,
+         tokenCount,
+         uniqueTokens)));
+      }();
+   };
+   var alphanumericCharacters = $Set.fromList($String.toList("abcdefghijklmnopqrstuvwxyz0123456789"));
+   var startingLetters = function (string) {
+      return function () {
+         var isAlnum = A2($Basics.flip,
+         $Set.member,
+         alphanumericCharacters);
+         return function ($) {
+            return $String.fromList($Basics.fst($));
+         }($List.partition(isAlnum)($String.toList(string)));
+      }();
+   };
+   var tokens = function (string) {
+      return $List.map(startingLetters)($List.map($String.toLower)($String.words(string)));
+   };
+   var attractions = _L.fromArray([{_: {}
+                                   ,body: "One of the most prestigious and well-preserved brochs in the \nShetland Islands, this impressive structure is a rotund tower lined with \nstone internally and externally to provide the optimum strength as a \ndefensive structure. The tower was built around 100 BC and is the only \nbroch which is complete right to the top, including the original \nintramural stair."
+                                   ,imageUrl: "http://farm2.static.flickr.com/1160/1427611613_a686a1854d_z.jpg?zz=1"
+                                   ,title: "Broch of Mousa"}
+                                  ,{_: {}
+                                   ,body: "Melrose Abbey was founded in 1136 by Cistercian monks, on the \nrequest of King David I of Scotland. This grand ruin with lavish masonic \ndecoration is thought to hold the embalmed heart of Robert the Bruce, \nanother king of Scotland. Truly a place of legends, Melrose Abbey is one \nof the most historically significant architectural structures in Scotland."
+                                   ,imageUrl: "http://farm4.static.flickr.com/3153/2729634256_863d2b2176_z.jpg?zz=1"
+                                   ,title: "Melrose Abbey"}
+                                  ,{_: {}
+                                   ,body: "Located on the most northern island of Skye, the beauty of the \nrolling peaks of the Cuiillin Hills is undeniable. These hills are made up \nof two diverse formations. The Red Cuiillins are a red granite formation, \nwhich are softer and more inviting in appearance. In opposition, the Black \nCuillins are more harsh in appearance with sharp, jagged peaks of volcanic \nrock that scale the skyline and warn off those who are unwelcome."
+                                   ,imageUrl: "http://farm3.static.flickr.com/2448/3633666760_f947b66942_z.jpg?zz=1"
+                                   ,title: "Cuillin Hills"}
+                                  ,{_: {}
+                                   ,body: "Located on the main island of Orkney, Skara Brae is one of the \nbest preserved Stone Age villages in Europe. It was covered for hundreds \nof years by a sand dune until a great storm exposed the site in 1850. The \nstone walls are relatively well preserved because the dwellings were \nfilled by sand almost immediately after the site was abandoned. Older than\nStonehenge and the Great Pyramids, it has been called the \"Scottish \nPompeii\" because of its excellent preservation."
+                                   ,imageUrl: "http://farm1.static.flickr.com/96/251621816_f4d2c13d90_z.jpg?zz=1"
+                                   ,title: "Skara Brae"}
+                                  ,{_: {}
+                                   ,body: "Stirling Castle is one of the most spectacular castles in all of \nScotland. High up on the vertical rock mass of Castle Hill, it rests, \ndefensively positioned along the steep surrounding cliffs. Experience the \nart, culture and status that encompassed 16th century in Scotland. History \nlovers will not want to miss this popular tourist attraction."
+                                   ,imageUrl: "http://farm1.static.flickr.com/183/483655010_d9c9794fbd_z.jpg?zz=1"
+                                   ,title: "Stirling Castle"}
+                                  ,{_: {}
+                                   ,body: "Luskentyre beach is situated on the spectacular west coast of \nSouth Harris in the Outer Hebrides. One of the most beautiful \ncolor-washed coastal areas of Scotland, its blue-green seas shimmer \nagainst creamy sands and the vibrant green hillside. Peaceful and \ntimeless, Luskentyre Beach has been voted Britain\'s best beach."
+                                   ,imageUrl: "http://farm6.static.flickr.com/5191/5902560358_914edfa75e_z.jpg?zz=1"
+                                   ,title: "Luskentyre Beach"}
+                                  ,{_: {}
+                                   ,body: "One of the most famous lakes in the world, Loch Ness is the second \nlargest loch in Scotland after Loch Lomond (and due to its great depth it \nis the largest by volume). About a mile wide at most places it holds the \nlegend of an infamous sea monster. The most notorious mythical creature of \nmodern time, Nessie, is said to dwell in the lake. With an air of mystery, \nthe intriguing area of Loch Ness should not be missed. You might even get \na glimpse of Nessie!"
+                                   ,imageUrl: "http://farm3.static.flickr.com/2712/4441473182_a5125fec3e_z.jpg?zz=1"
+                                   ,title: "Loch Ness"}
+                                  ,{_: {}
+                                   ,body: "Situated deep into the highlands of Scotland, Ben Nevis is the \nBritish Isle\'s highest summit. Offering stunningly spectacular views and \nhistorical malice, Ben Nevis attracts viewers, hikers and climbers alike \nto celebrate the tranquility of the surrounding nature. The mountain is \nreadily accessible via a man-made path which zig zags up its south \nwesterly face, while the rock face on the north west of the mountain is \nstrictly for experienced mountaineers only."
+                                   ,imageUrl: "http://farm5.static.flickr.com/4154/4963323610_47f0ebdef4_z.jpg?zz=1"
+                                   ,title: "Ben Nevis"}
+                                  ,{_: {}
+                                   ,body: "Eilean Donan is a small island in Loch Duich in the western \nHighlands of Scotland. Connected to the mainland by a footbridge, the \nisland is dominated by a picturesque medieval castle. The original castle \nwas built in the early 13th century as a defense against the Vikings. \nToday, the castle is one of the most photographed monuments in Scotland \nand a popular venue for weddings and film locations. It has appeared in \nsuch films as Highlander and The World Is Not Enough."
+                                   ,imageUrl: "https://c2.staticflickr.com/4/3293/2433869373_15e31d33d2_z.jpg?zz=1"
+                                   ,title: "Eilean Donan"}
+                                  ,{_: {}
+                                   ,body: "Edinburgh Castle is a magnificent example of Scotland\'s \narchitecture, ideology, political tact and military importance. High up on \nthe summit of a dormant volcano lurks this dominating structure. Its \npresence is visible for miles in every direction. Intimidating all who \nwould challenge them, the Scottish utilized Edinburgh Castle for all of \ntheir major battles and military strategizing. A strong standing symbol \nof their perseverance and struggle for independence, Edinburgh Castle is \none of the top tourist attractions in Scotland."
+                                   ,imageUrl: "https://c4.staticflickr.com/8/7386/9550271050_32bf1bf589_c.jpg?zz=1"
+                                   ,title: "Edinburgh Castle"}]);
+   var idf = function (token) {
+      return function () {
+         var documents = A2($List.map,
+         function ($) {
+            return $Set.fromList(tokens(function (_) {
+               return _.body;
+            }($)));
+         },
+         attractions);
+         var tokenFrequency = $List.length(A2($List.filter,
+         $Set.member(token),
+         documents));
+         return $Basics.logBase(2)($Basics.toFloat($List.length(attractions)) / $Basics.toFloat(tokenFrequency));
+      }();
+   };
+   var relevance = F2(function (query,
+   document) {
+      return function () {
+         var documents = A2($List.map,
+         function ($) {
+            return tokens(function (_) {
+               return _.body;
+            }($));
+         },
+         attractions);
+         var averageK = function ($) {
+            return $Basics.toFloat($List.sum($));
+         }(A2($List.map,
+         $List.length,
+         documents)) / function ($) {
+            return $Basics.toFloat($List.length($));
+         }(documents);
+         var k = 2;
+         var documentCounts = counts(document);
+         var documentCount = function (token) {
+            return $Basics.toFloat(A3($Dict.getOrElse,
+            0,
+            token,
+            documentCounts));
+         };
+         var documentSquash = function (token) {
+            return documentCount(token) + averageK * $Basics.toFloat($List.length(document));
+         };
+         var queryCounts = counts(query);
+         var queryCount = function (token) {
+            return $Basics.toFloat(A3($Dict.getOrElse,
+            0,
+            token,
+            queryCounts));
+         };
+         var tfidf = function (token) {
+            return queryCount(token) * documentCount(token) / documentSquash(token) * idf(token);
+         };
+         var mutualTokens = $Set.toList($Basics.uncurry($Set.intersect)({ctor: "_Tuple2"
+                                                                        ,_0: $Set.fromList(query)
+                                                                        ,_1: $Set.fromList(document)}));
+         return $List.sum(A2($List.map,
+         tfidf,
+         mutualTokens));
+      }();
+   });
+   var attractionsByRelevance = function (query) {
+      return $List.map($Basics.snd)($List.reverse($List.sortBy($Basics.fst)($List.filter(function ($) {
+         return F2(function (x,y) {
+            return _U.cmp(x,y) < 0;
+         })(0)($Basics.fst($));
+      })(A2($Basics.flip,
+      $List.zip,
+      attractions)($List.map(function ($) {
+         return relevance(query)(tokens(function (_) {
+            return _.body;
+         }($)));
+      })(attractions))))));
+   };
+   var Attraction = F3(function (a,
+   b,
+   c) {
+      return {_: {}
+             ,body: b
+             ,imageUrl: c
+             ,title: a};
+   });
+   var scene = function (fieldContent) {
+      return function () {
+         var result = function (attraction) {
+            return $Graphics$Element.flow($Graphics$Element.right)(A2($Basics.flip,
+            F2(function (x,y) {
+               return A2($List._op["::"],
+               x,
+               y);
+            }),
+            _L.fromArray([A3($Graphics$Element.image,
+            275,
+            200,
+            attraction.imageUrl)]))($Graphics$Element.flow($Graphics$Element.down)($List.map($Text.leftAligned)(_L.fromArray([function ($) {
+                                                                                                                                return $Text.bold($Text.toText($));
+                                                                                                                             }(attraction.title)
+                                                                                                                             ,$Text.toText(attraction.body)
+                                                                                                                             ,$Text.toText("\n")])))));
+         };
+         var sortedAttractions = attractionsByRelevance(tokens(fieldContent.string));
+         return $Graphics$Element.flow($Graphics$Element.down)(A2($List.map,
+         result,
+         sortedAttractions));
+      }();
+   };
+   var searchBar = $Graphics$Input.input($Graphics$Input$Field.noContent);
+   var main = function () {
+      var searchBox = A3($Graphics$Input$Field.field,
+      $Graphics$Input$Field.defaultStyle,
+      searchBar.handle,
+      $Basics.identity);
+      return $Signal.lift($Graphics$Element.flow($Graphics$Element.down))($Signal.combine(_L.fromArray([A2($Signal.lift,
+                                                                                                       searchBox("Find Scottish tourist attractions"),
+                                                                                                       searchBar.signal)
+                                                                                                       ,$Signal.constant($Text.plainText("\n"))
+                                                                                                       ,$Signal.lift(scene)($Signal.sampleOn($Time.every(2 * $Time.second))($Signal.dropRepeats(searchBar.signal)))])));
+   }();
+   _elm.Main.values = {_op: _op
+                      ,searchBar: searchBar
+                      ,main: main
+                      ,scene: scene
+                      ,Attraction: Attraction
+                      ,attractions: attractions
+                      ,alphanumericCharacters: alphanumericCharacters
+                      ,startingLetters: startingLetters
+                      ,tokens: tokens
+                      ,unique: unique
+                      ,counts: counts
+                      ,idf: idf
+                      ,relevance: relevance
+                      ,attractionsByRelevance: attractionsByRelevance};
+   return _elm.Main.values;
+};</script><script type="text/javascript">var runningElmModule = Elm.fullscreen(Elm.Main);</script><br /><a href="https://github.com/hchasestevens/apl_elm/blob/master/report.pdf?raw=true">Functional Reactive Programming in Elm</a><br /><a href="https://github.com/hchasestevens/apl_elm/blob/master/Elm/Main.elm">Source code</a><div><div style="padding: 0px; margin: 0px; width: 200px; height: 50px; background-color: transparent;"><!--<input type="text" placeholder="Enter search" style="padding: 4px; margin: 0px; border: 1px solid rgb(211, 215, 207); border-radius: 2px; outline-width: 1px; outline-color: rgb(52, 101, 164); color: rgb(0, 0, 0); font-weight: normal; font-style: normal; pointer-events: auto; width: 190px; height: 20px; background-color: transparent;">--><div style="padding: 0px; margin: 0px; visibility: visible; text-align: left; pointer-events: auto; width: 0px; height: 20px; background-color: transparent;"><br></div><div style="padding: 0px; margin: 0px; width: 0px; height: 0px; background-color: transparent;"></div></div></div></body></html>
